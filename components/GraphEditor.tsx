@@ -61,7 +61,7 @@ export const GraphEditor: React.FC<GraphEditorProps> = ({ initialData, onDataCha
 
   const addNode = useCallback(() => {
     const newNode: Node = {
-      id: `node-${Date.now()}`,
+      id: `level-${Date.now()}`,
       type: 'default',
       position: {
         x: Math.random() * 400 + 100,
@@ -71,6 +71,17 @@ export const GraphEditor: React.FC<GraphEditorProps> = ({ initialData, onDataCha
     };
     setNodes((nds) => [...nds, newNode]);
   }, [nodes.length, setNodes]);
+  
+  const handleNodeDoubleClick = useCallback((event: any, node: Node) => {
+    const newLabel = prompt('Enter level name:', node.data.label || '');
+    if (newLabel !== null && newLabel.trim() !== '') {
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === node.id ? { ...n, data: { ...n.data, label: newLabel.trim() } } : n
+        )
+      );
+    }
+  }, [setNodes]);
 
   const deleteSelected = useCallback(() => {
     setNodes((nds) => nds.filter((node) => !node.selected));
@@ -99,6 +110,7 @@ export const GraphEditor: React.FC<GraphEditorProps> = ({ initialData, onDataCha
         onNodesChange={onNodesUpdate}
         onEdgesChange={onEdgesUpdate}
         onConnect={onConnect}
+        onNodeDoubleClick={handleNodeDoubleClick}
         fitView
         nodesDraggable={true}
         nodesConnectable={true}

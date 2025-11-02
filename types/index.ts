@@ -1,13 +1,18 @@
 import { Node, Edge } from 'reactflow';
 
 export type UserRole = 'student' | 'creator' | 'admin';
-export type CourseType = 'platform_official' | 'certified_creator' | 'public';
+export type UserType = 'Expert' | 'Challenger' | 'Architect'; // Based on course count
+export type CourseType = 'platform_official' | 'expert' | 'basic' | 'advanced' | 'certified_creator' | 'public';
 
 export interface User {
   id: string;
   email: string;
   displayName: string;
+  description?: string; // User profile description
   role: UserRole;
+  userType?: UserType; // Calculated based on course count, default 'Challenger'
+  courseCount?: number; // Number of courses created
+  expertRequestSent?: boolean; // Whether user has requested Expert status
   progress: Record<string, CourseProgress>;
 }
 
@@ -20,7 +25,9 @@ export interface Course {
   id: string;
   title: string;
   description: string;
+  detailedDescription?: string; // Detailed description for course creation
   creatorId: string;
+  creatorType?: UserType; // Type of user who created the course
   type: CourseType;
   graphData: string; // JSON stringified ReactFlow data
 }
@@ -28,9 +35,10 @@ export interface Course {
 export interface Level {
   id: string; // Must match nodeId from graphData
   title: string;
-  studyMaterials: StudyMaterial[];
-  mcqQuiz: MCQQuestion[];
-  aiQuizContext: string;
+  studyMaterials: StudyMaterial[]; // Round 1
+  mcqQuiz: MCQQuestion[]; // Round 2
+  passingScore: number; // Minimum score needed to pass this level
+  aiQuizContext: string; // Round 3 (for future AI integration)
 }
 
 export interface StudyMaterial {
@@ -41,8 +49,9 @@ export interface StudyMaterial {
 
 export interface MCQQuestion {
   question: string;
-  options: string[];
+  options: string[]; // 4-6 options
   correctIndex: number;
+  points: number; // Points assigned to this question
 }
 
 export interface ReactFlowData {
@@ -59,6 +68,8 @@ export interface AIQuizResult {
 export interface CourseCreationData {
   title: string;
   description: string;
+  detailedDescription: string; // Detailed description required
+  numberOfLevels: number; // User specifies number of levels
   type: CourseType;
   graphData: ReactFlowData;
   levels: Record<string, Omit<Level, 'id'>>;

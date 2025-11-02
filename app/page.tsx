@@ -2,13 +2,16 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
 import { getAllCourses } from '@/lib/firestore';
 import { Course } from '@/types';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { BookOpen, ArrowRight, Star } from 'lucide-react';
+import { BookOpen, ArrowRight, Star, Plus } from 'lucide-react';
 
 export default function HomePage() {
+  const [user] = useAuthState(auth);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,16 +35,31 @@ export default function HomePage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Hero Section */}
       <div className="text-center mb-16">
-        <h1 className="text-5xl font-extrabold text-gray-900 mb-4">
-          Master Skills Through
-          <span className="bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
-            {' '}Interactive Learning
-          </span>
-        </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Navigate skill trees, unlock levels, and test your knowledge with AI-powered quizzes.
-          Your learning journey, gamified.
-        </p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex-1"></div>
+          <div className="flex-1 text-center">
+            <h1 className="text-5xl font-extrabold text-gray-900 mb-4">
+              Master Skills Through
+              <span className="bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
+                {' '}Interactive Learning
+              </span>
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Navigate skill trees, unlock levels, and test your knowledge with AI-powered quizzes.
+              Your learning journey, gamified.
+            </p>
+          </div>
+          <div className="flex-1 flex justify-end">
+            {user && (
+              <Link href="/create-course">
+                <Button variant="primary" className="flex items-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  Create Course
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Featured Courses */}
@@ -60,10 +78,21 @@ export default function HomePage() {
             {platformOfficial.map((course) => (
               <Card key={course.id} hover>
                 <div className="flex flex-col h-full">
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 flex-wrap mb-3">
                     <span className="px-2 py-1 text-xs font-semibold text-primary-700 bg-primary-100 rounded">
-                      {course.type.replace('_', ' ').toUpperCase()}
+                      PLATFORM (EXCLUSIVE)
                     </span>
+                    {course.creatorType && (
+                      <span className={`px-2 py-1 text-xs font-semibold rounded ${
+                        course.creatorType === 'Expert' 
+                          ? 'text-yellow-700 bg-yellow-100' 
+                          : course.creatorType === 'Architect'
+                          ? 'text-purple-700 bg-purple-100'
+                          : 'text-blue-700 bg-blue-100'
+                      }`}>
+                        {course.creatorType}
+                      </span>
+                    )}
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{course.title}</h3>
                   <p className="text-gray-600 mb-4 flex-grow">{course.description}</p>
@@ -87,10 +116,21 @@ export default function HomePage() {
                   .map((course) => (
                     <Card key={course.id} hover>
                       <div className="flex flex-col h-full">
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2 flex-wrap mb-3">
                           <span className="px-2 py-1 text-xs font-semibold text-purple-700 bg-purple-100 rounded">
                             {course.type.replace('_', ' ').toUpperCase()}
                           </span>
+                          {course.creatorType && (
+                            <span className={`px-2 py-1 text-xs font-semibold rounded ${
+                              course.creatorType === 'Expert' 
+                                ? 'text-yellow-700 bg-yellow-100' 
+                                : course.creatorType === 'Architect'
+                                ? 'text-purple-700 bg-purple-100'
+                                : 'text-blue-700 bg-blue-100'
+                            }`}>
+                              {course.creatorType}
+                            </span>
+                          )}
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">{course.title}</h3>
                         <p className="text-gray-600 mb-4 flex-grow">{course.description}</p>

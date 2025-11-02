@@ -17,10 +17,13 @@ import Link from 'next/link';
 export default function CreateCoursePage() {
   const router = useRouter();
   const [user] = useAuthState(auth);
+  const [userData, setUserData] = useState<any>(null);
   const [step, setStep] = useState(1);
   const [courseData, setCourseData] = useState<Partial<CourseCreationData>>({
     title: '',
     description: '',
+    detailedDescription: '',
+    numberOfLevels: 1,
     type: 'public',
     graphData: { nodes: [], edges: [] },
     levels: {},
@@ -30,17 +33,19 @@ export default function CreateCoursePage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const checkAccess = async () => {
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      const userData = await getUserData(user.uid);
-      if (userData?.role !== 'creator' && userData?.role !== 'admin') {
-        router.push('/');
+    const loadUserData = async () => {
+      if (user) {
+        const data = await getUserData(user.uid);
+        setUserData(data);
       }
     };
-    checkAccess();
+    loadUserData();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+    }
   }, [user, router]);
 
   const handleGraphDataChange = (data: ReactFlowData) => {
@@ -66,13 +71,19 @@ export default function CreateCoursePage() {
   };
 
   const handleSubmit = async () => {
-    if (!user || !courseData.title || !courseData.description || !courseData.graphData) {
+    if (!user || !courseData.title || !courseData.description || !courseData.detailedDescription || !courseData.graphData) {
       alert('Please fill in all required fields');
       return;
     }
 
     if (courseData.graphData.nodes.length === 0) {
       alert('Please create at least one node in the course map');
+      return;
+    }
+
+    // Check if number of levels matches nodes
+    if (courseData.graphData.nodes.length !== (courseData.numberOfLevels || 0)) {
+      alert(`Number of levels (${courseData.numberOfLevels}) must match the number of nodes (${courseData.graphData.nodes.length})`);
       return;
     }
 
@@ -88,12 +99,13 @@ export default function CreateCoursePage() {
 
     setSaving(true);
     try {
-      // Create course
+      // Create course (type will be auto-determined based on user type)
       const courseId = await createCourse(
         {
           title: courseData.title,
           description: courseData.description,
-          type: courseData.type as CourseType,
+          detailedDescription: courseData.detailedDescription,
+          type: 'basic' as CourseType, // Will be overridden in createCourse function
           graphData: JSON.stringify(courseData.graphData),
           creatorId: user.uid,
         },
@@ -162,32 +174,77 @@ export default function CreateCoursePage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description *
+                Short Description *
               </label>
               <textarea
                 value={courseData.description}
                 onChange={(e) => setCourseData({ ...courseData, description: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                rows={4}
-                placeholder="Describe what students will learn in this course..."
+                rows={3}
+                placeholder="Brief description of the course..."
                 required
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Course Type *
+                Detailed Description *
               </label>
-              <select
-                value={courseData.type}
-                onChange={(e) =>
-                  setCourseData({ ...courseData, type: e.target.value as CourseType })
-                }
+              <textarea
+                value={courseData.detailedDescription}
+                onChange={(e) => setCourseData({ ...courseData, detailedDescription: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="public">Public</option>
-                <option value="certified_creator">Certified Creator</option>
-              </select>
+                rows={6}
+                placeholder="Provide a detailed description of the course, what students will learn, prerequisites, etc."
+                required
+              />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Number of Levels *
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={courseData.numberOfLevels || 1}
+                onChange={(e) => setCourseData({ ...courseData, numberOfLevels: parseInt(e.target.value) || 1 })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">Each level will have 3 rounds: Study Materials, MCQ Quiz, and AI Quiz</p>
+            </div>
+            {userData && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Course Type (Auto-determined)
+                </label>
+                <div className="flex items-center gap-3">
+                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                    userData.userType === 'Expert' 
+                      ? 'bg-yellow-100 text-yellow-700' 
+                      : userData.userType === 'Architect'
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {userData.userType || 'Challenger'}
+                  </span>
+                  <span className="text-sm text-gray-700">
+                    → Your course will be tagged as: <strong className="font-semibold">
+                      {userData.userType === 'Expert' 
+                        ? 'Expert Course' 
+                        : userData.userType === 'Architect'
+                        ? 'Advanced Course'
+                        : 'Basic Course'}
+                    </strong>
+                  </span>
+                </div>
+                {(!userData.userType || userData.userType === 'Challenger') && (
+                  <p className="text-xs text-gray-600 mt-2">
+                    Create 10+ courses to become an Architect and create Advanced courses. 
+                    Request Expert status in your profile to create Expert courses.
+                  </p>
+                )}
+              </div>
+            )}
             <Button variant="primary" onClick={() => setStep(2)} className="w-full">
               Next: Create Course Map
             </Button>
@@ -310,9 +367,10 @@ const LevelConfigModal: React.FC<LevelConfigModalProps> = ({
   );
   const [mcqQuestions, setMcqQuestions] = useState(
     existingData?.mcqQuiz || [
-      { question: '', options: ['', '', '', ''], correctIndex: 0 },
+      { question: '', options: ['', '', '', ''], correctIndex: 0, points: 1 },
     ]
   );
+  const [passingScore, setPassingScore] = useState(existingData?.passingScore || 0);
   const [aiQuizContext, setAiQuizContext] = useState(existingData?.aiQuizContext || '');
 
   const handleAddStudyMaterial = () => {
@@ -324,10 +382,41 @@ const LevelConfigModal: React.FC<LevelConfigModalProps> = ({
   };
 
   const handleAddMcqQuestion = () => {
+    if (mcqQuestions.length >= 40) {
+      alert('Maximum 40 questions allowed');
+      return;
+    }
     setMcqQuestions([
       ...mcqQuestions,
-      { question: '', options: ['', '', '', ''], correctIndex: 0 },
+      { question: '', options: ['', '', '', ''], correctIndex: 0, points: 1 },
     ]);
+  };
+
+  const handleAddOption = (qIndex: number) => {
+    if (mcqQuestions[qIndex].options.length >= 6) {
+      alert('Maximum 6 options per question');
+      return;
+    }
+    const newQuestions = [...mcqQuestions];
+    newQuestions[qIndex].options.push('');
+    setMcqQuestions(newQuestions);
+  };
+
+  const handleRemoveOption = (qIndex: number, oIndex: number) => {
+    if (mcqQuestions[qIndex].options.length <= 4) {
+      alert('Minimum 4 options required per question');
+      return;
+    }
+    const newQuestions = [...mcqQuestions];
+    const removedIndex = newQuestions[qIndex].correctIndex;
+    newQuestions[qIndex].options.splice(oIndex, 1);
+    // Adjust correct index if needed
+    if (removedIndex >= oIndex && removedIndex > 0) {
+      newQuestions[qIndex].correctIndex = removedIndex - 1;
+    } else if (removedIndex === oIndex && removedIndex === newQuestions[qIndex].options.length) {
+      newQuestions[qIndex].correctIndex = removedIndex - 1;
+    }
+    setMcqQuestions(newQuestions);
   };
 
   const handleRemoveMcqQuestion = (index: number) => {
@@ -335,11 +424,69 @@ const LevelConfigModal: React.FC<LevelConfigModalProps> = ({
   };
 
   const handleSave = () => {
+    // Validate title
+    if (!title.trim()) {
+      alert('Please enter a level title');
+      return;
+    }
+
+    // Validate MCQ questions
+    const validQuestions = mcqQuestions.filter((q) => q.question.trim() !== '' && q.options.some(o => o.trim() !== ''));
+    
+    if (validQuestions.length < 4) {
+      alert('Minimum 4 MCQ questions required. Please fill in all questions.');
+      return;
+    }
+    if (validQuestions.length > 40) {
+      alert('Maximum 40 MCQ questions allowed');
+      return;
+    }
+
+    // Validate each question has 4-6 options and all options are filled
+    for (let i = 0; i < validQuestions.length; i++) {
+      const q = validQuestions[i];
+      const filledOptions = q.options.filter(o => o.trim() !== '');
+      
+      if (filledOptions.length < 4 || filledOptions.length > 6) {
+        alert(`Question ${i + 1} must have 4-6 filled options. Currently has ${filledOptions.length} filled option(s).`);
+        return;
+      }
+      
+      // Validate correct index is within range
+      if (q.correctIndex < 0 || q.correctIndex >= filledOptions.length) {
+        alert(`Question ${i + 1} has an invalid correct answer index. Please select a valid option.`);
+        return;
+      }
+      
+      // Validate points
+      if (!q.points || q.points < 1) {
+        alert(`Question ${i + 1} must have at least 1 point.`);
+        return;
+      }
+    }
+
+    // Calculate total points from valid questions
+    const totalPoints = validQuestions.reduce((sum, q) => sum + (q.points || 1), 0);
+    
+    if (!passingScore || passingScore < 0) {
+      alert('Please enter a valid passing score (0 or greater)');
+      return;
+    }
+    
+    if (passingScore > totalPoints) {
+      alert(`Passing score (${passingScore}) cannot exceed total points (${totalPoints})`);
+      return;
+    }
+
     const levelData: Omit<Level, 'id'> = {
-      title,
+      title: title.trim(),
       studyMaterials: studyMaterials.filter((m) => m.url.trim() !== ''),
-      mcqQuiz: mcqQuestions.filter((q) => q.question.trim() !== ''),
-      aiQuizContext,
+      mcqQuiz: validQuestions.map(q => ({
+        ...q,
+        options: q.options.filter(o => o.trim() !== ''), // Remove empty options
+      })),
+      passingScore,
+      aiQuizContext: aiQuizContext.trim(),
     };
     onSave(levelData);
   };
@@ -360,7 +507,7 @@ const LevelConfigModal: React.FC<LevelConfigModalProps> = ({
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">Study Materials</label>
+            <label className="block text-sm font-medium text-gray-700">Round 1: Study Materials (Links)</label>
             <Button variant="ghost" size="sm" onClick={handleAddStudyMaterial}>
               <Plus className="w-4 h-4 mr-1" />
               Add Material
@@ -418,23 +565,74 @@ const LevelConfigModal: React.FC<LevelConfigModalProps> = ({
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">MCQ Quiz</label>
-            <Button variant="ghost" size="sm" onClick={handleAddMcqQuestion}>
+            <label className="block text-sm font-medium text-gray-700">
+              MCQ Quiz (Round 2) - {mcqQuestions.length} / 40 questions
+            </label>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleAddMcqQuestion}
+              disabled={mcqQuestions.length >= 40}
+            >
               <Plus className="w-4 h-4 mr-1" />
               Add Question
             </Button>
           </div>
+          {mcqQuestions.length < 4 && (
+            <p className="text-xs text-amber-600 mb-2">Minimum 4 questions required</p>
+          )}
           <div className="space-y-4">
             {mcqQuestions.map((question, qIndex) => (
               <div key={qIndex} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Question {qIndex + 1}</span>
-                  <button
-                    onClick={() => handleRemoveMcqQuestion(qIndex)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <span className="font-semibold">Question {qIndex + 1}</span>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-gray-600">Points:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={question.points || 1}
+                        onChange={(e) => {
+                          const newQuestions = [...mcqQuestions];
+                          newQuestions[qIndex].points = parseInt(e.target.value) || 1;
+                          setMcqQuestions(newQuestions);
+                        }}
+                        className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {question.options.length < 6 && (
+                      <button
+                        onClick={() => handleAddOption(qIndex)}
+                        className="text-xs text-blue-600 hover:text-blue-700 px-2 py-1"
+                      >
+                        + Option
+                      </button>
+                    )}
+                    {question.options.length > 4 && (
+                      <button
+                        onClick={() => {
+                          if (question.options.length > 4) {
+                            const lastIndex = question.options.length - 1;
+                            handleRemoveOption(qIndex, lastIndex);
+                          }
+                        }}
+                        className="text-xs text-red-600 hover:text-red-700 px-2 py-1"
+                      >
+                        - Option
+                      </button>
+                    )}
+                    {mcqQuestions.length > 4 && (
+                      <button
+                        onClick={() => handleRemoveMcqQuestion(qIndex)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <input
                   type="text"
@@ -468,31 +666,64 @@ const LevelConfigModal: React.FC<LevelConfigModalProps> = ({
                           newQuestions[qIndex].options[oIndex] = e.target.value;
                           setMcqQuestions(newQuestions);
                         }}
-                        placeholder={`Option ${oIndex + 1}`}
+                        placeholder={`Option ${oIndex + 1}${question.correctIndex === oIndex ? ' (Correct)' : ''}`}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
                       />
+                      {question.correctIndex === oIndex && (
+                        <span className="text-xs text-green-600 font-semibold">✓ Correct</span>
+                      )}
+                      {question.options.length > 4 && (
+                        <button
+                          onClick={() => handleRemoveOption(qIndex, oIndex)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
             ))}
           </div>
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Passing Score for this Level *
+              </label>
+              <span className="text-xs text-gray-500">
+                Total Points: {mcqQuestions.reduce((sum, q) => sum + (q.points || 1), 0)}
+              </span>
+            </div>
+            <input
+              type="number"
+              min="0"
+              max={mcqQuestions.reduce((sum, q) => sum + (q.points || 1), 0)}
+              value={passingScore}
+              onChange={(e) => setPassingScore(parseInt(e.target.value) || 0)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              placeholder="Minimum score to pass"
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Students must score at least {passingScore} points to pass this level and proceed to the next.
+            </p>
+          </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            AI Quiz Context *
+            AI Quiz Context (Round 3 - For Future Implementation)
           </label>
           <textarea
             value={aiQuizContext}
             onChange={(e) => setAiQuizContext(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg"
             rows={6}
-            placeholder="Provide a detailed description of this level's content. The AI will use this to generate questions for the AI Challenge round."
-            required
+            placeholder="Provide a detailed description of this level's content. The AI will use this to generate questions for the AI Challenge round (coming in next version)."
           />
           <p className="text-xs text-gray-500 mt-1">
-            This context will be used by the AI to generate questions. Be detailed and comprehensive.
+            This context will be used by the AI in future versions to generate questions. You can leave this blank for now.
           </p>
         </div>
 

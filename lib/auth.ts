@@ -24,6 +24,8 @@ export const signUp = async (email: string, password: string, displayName: strin
     email: user.email,
     displayName: displayName || user.email?.split('@')[0] || 'User',
     role,
+    courseCount: 0,
+    userType: 'Challenger',
     progress: {},
     createdAt: serverTimestamp(),
   });
@@ -44,6 +46,8 @@ export const signInWithGoogle = async () => {
       email: user.email,
       displayName: user.displayName || user.email?.split('@')[0] || 'User',
       role: 'student',
+      courseCount: 0,
+      userType: 'Challenger',
       progress: {},
       createdAt: serverTimestamp(),
     });
