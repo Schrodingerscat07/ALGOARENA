@@ -9,7 +9,7 @@ import { Course, CourseProgress, ReactFlowData } from '@/types';
 import { CourseMap } from '@/components/CourseMap';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { ArrowLeft, BookOpen } from 'lucide-react';
+import { ArrowLeft, BookOpen, Edit3 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function CoursePage() {
@@ -102,6 +102,14 @@ export default function CoursePage() {
             <h1 className="text-4xl font-bold text-gray-900 mb-2">{course.title}</h1>
             <p className="text-lg text-gray-600">{course.description}</p>
           </div>
+          {user && course.creatorId === user.uid && (
+            <Link href={`/course/${courseId}/edit`}>
+              <Button variant="primary" className="inline-flex items-center gap-2">
+                <Edit3 className="w-4 h-4" />
+                Edit Course
+              </Button>
+            </Link>
+          )}
         </div>
 
         {user && (

@@ -134,6 +134,17 @@ export const createCourse = async (courseData: Omit<Course, 'id'>, creatorId: st
   return courseRef.id;
 };
 
+export const updateCourse = async (
+  courseId: string,
+  updates: Partial<Omit<Course, 'id' | 'creatorId'>>
+): Promise<void> => {
+  const courseRef = doc(db, 'courses', courseId);
+  await updateDoc(courseRef, {
+    ...updates,
+    updatedAt: serverTimestamp(),
+  });
+};
+
 // Levels
 export const getLevel = async (courseId: string, levelId: string): Promise<Level | null> => {
   const levelDoc = await getDoc(doc(db, 'courses', courseId, 'levels', levelId));

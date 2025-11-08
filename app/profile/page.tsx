@@ -10,7 +10,8 @@ import { db } from '@/lib/firebase';
 import { User, UserType } from '@/types';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { User as UserIcon, Edit2, Check, X, Send } from 'lucide-react';
+import { User as UserIcon, Edit2, Check, X, Send, Plus } from 'lucide-react';
+import Link from 'next/link';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -127,6 +128,16 @@ export default function ProfilePage() {
 
       <Card>
         <div className="p-6">
+          {userData.role === 'creator' && (
+            <div className="mb-6 flex justify-end">
+              <Link href="/create-course">
+                <Button variant="primary">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Course
+                </Button>
+              </Link>
+            </div>
+          )}
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 bg-gradient-to-br from-primary-600 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
