@@ -28,9 +28,9 @@ const nodeTypes = {
     const { status, label } = data;
     
     const statusStyles = {
-      completed: 'bg-green-500 text-white shadow-lg animate-glow',
-      unlocked: 'bg-blue-500 text-white shadow-lg ring-4 ring-blue-300',
-      locked: 'bg-gray-300 text-gray-600 cursor-not-allowed opacity-60',
+      completed: 'bg-gradient-to-br from-green-400 via-green-500 to-yellow-300 text-white shadow-xl animate-glow',
+      unlocked: 'bg-gradient-to-br from-blue-400 via-blue-500 to-purple-400 text-white shadow-xl ring-4 ring-blue-300 animate-pulse-slow',
+      locked: 'bg-gradient-to-br from-gray-300 via-gray-400 to-gray-200 text-gray-600 cursor-not-allowed opacity-60',
     };
     
     return (
@@ -129,7 +129,7 @@ export const CourseMap: React.FC<CourseMapProps> = ({
   };
 
   return (
-    <div className="w-full h-[600px] border border-gray-300 rounded-lg bg-gray-50">
+  <div className="w-full h-[600px] border-4 border-game-accent2 rounded-2xl bg-gradient-to-br from-game-surface via-game-background to-game-accent1 animate-glow">
       <ReactFlow
         nodes={nodes}
         edges={edges}

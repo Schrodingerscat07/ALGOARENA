@@ -32,32 +32,37 @@ export default function HomePage() {
   const platformOfficial = courses.filter((c) => c.type === 'platform_official');
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="w-full px-0 py-12">
       {/* Hero Section */}
-      <div className="text-center mb-16">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex-1"></div>
-          <div className="flex-1 text-center">
-            <h1 className="text-5xl font-extrabold text-gray-900 mb-4">
-              Master Skills Through
-              <span className="bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
-                {' '}Interactive Learning
-              </span>
-            </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Navigate skill trees, unlock levels, and test your knowledge with AI-powered quizzes.
-              Your learning journey, gamified.
-            </p>
+      <div className="mb-16">
+        <div className="flex items-center justify-between mb-8 w-full">
+          {/* Left pixel-art or icon */}
+          <div className="hidden md:flex flex-1 justify-center">
+            <span className="text-6xl" role="img" aria-label="game icon">🎮</span>
           </div>
-          <div className="flex-1 flex justify-end">
-            {user && (
-              <Link href="/create-course">
-                <Button variant="primary" className="flex items-center gap-2">
-                  <Plus className="w-5 h-5" />
-                  Create Course
-                </Button>
-              </Link>
-            )}
+          {/* Centered, expanded text */}
+          <div className="flex-[2] text-center w-full">
+            <h1 className="text-5xl font-extrabold text-gray-900 mb-4 w-full">
+              <div className="flex flex-col items-center space-y-1 w-full">
+                <span className="text-4xl md:text-6xl font-extrabold bg-gradient-to-r from-game-accent1 via-primary-400 to-game-accent2 bg-clip-text text-transparent w-full block tracking-tight">
+                  Master <span className="text-game-accent2">Skills</span><span className="text-primary-400">Through</span>
+                </span>
+                <span className="text-2xl md:text-4xl font-bold text-game-highlight w-full block">
+                  Interactive Learning
+                </span>
+                <span className="text-lg md:text-2xl text-game-text w-full block">
+                  Navigate skill trees, unlock levels, and test your knowledge with AI-powered quizzes.
+                </span>
+                <span className="text-lg md:text-2xl text-game-text w-full block">
+                  Your learning journey, gamified.
+                </span>
+                <span className="h-2"></span>
+              </div>
+            </h1>
+          </div>
+          {/* Right pixel-art or icon */}
+          <div className="hidden md:flex flex-1 justify-center">
+            <span className="text-6xl" role="img" aria-label="trophy">🏆</span>
           </div>
         </div>
       </div>
@@ -71,7 +76,9 @@ export default function HomePage() {
         <>
           <div className="mb-8 flex items-center gap-2">
             <Star className="w-6 h-6 text-yellow-500" />
-            <h2 className="text-3xl font-bold text-gray-900">Platform Official Courses</h2>
+            <h2 className="text-4xl font-extrabold text-game-accent1 animate-glow drop-shadow-[0_0_10px_#7A3BB3]">
+              Platform Official Courses
+            </h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -109,7 +116,9 @@ export default function HomePage() {
 
           {courses.filter((c) => c.type !== 'platform_official').length > 0 && (
             <>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">All Courses</h2>
+              <h2 className="text-4xl font-extrabold text-game-accent2 animate-pulse mb-6 drop-shadow-[0_0_10px_#41A6F6]">
+                All Courses
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {courses
                   .filter((c) => c.type !== 'platform_official')

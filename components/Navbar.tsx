@@ -40,23 +40,25 @@ export const Navbar: React.FC = () => {
           </Link>
 
           <div className="flex items-center space-x-4">
-            <Link
-              href="/"
-              className="text-game-accent2 hover:text-game-accent1 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
-            >
-              <BookOpen className="w-4 h-4" />
-              Courses
-            </Link>
 
-            {userData?.role === 'creator' && (
+            <div className="flex items-center space-x-2">
               <Link
-                href="/create-course"
+                href="/courses"
                 className="text-game-accent2 hover:text-game-accent1 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
               >
-                <Plus className="w-4 h-4" />
-                Create Course
+                <BookOpen className="w-4 h-4" />
+                Courses
               </Link>
-            )}
+              {user && (
+                <Link
+                  href="/create-course"
+                  className="text-game-accent2 hover:text-game-accent1 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Course
+                </Link>
+              )}
+            </div>
 
             {userData?.role === 'admin' && (
               <Link
