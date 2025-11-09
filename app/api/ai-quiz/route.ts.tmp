@@ -1,0 +1,180 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+
+const initializeGeminiClient = () => {
+  const apiKey = process.env.GOOGLE_API_KEY;
+  if (!apiKey) {
+    console.error('ERROR: GOOGLE_API_KEY is not set!');
+    throw new Error('API key not configured');
+  }
+
+  return new ChatGoogleGenerativeAI({
+    apiKey,
+    model: 'gemini-2.5-flash',
+    maxOutputTokens: 2048,
+  });
+};
+
+const cleanAndValidateQuestions = (questions: any[]) => {
+  const cleanedQuestions = [];
+  
+  for (let i = 0; i < questions.length; i++) {
+    const q = questions[i];
+    
+    // Basic structure check
+    if (!q || typeof q !== 'object') {
+      console.error(`Question ${i} is not an object:`, q);
+      throw new Error(`Question ${i} is invalid`);
+    }
+
+    // Question text validation
+    if (!q.question || typeof q.question !== 'string') {
+      console.error(`Question ${i} has invalid question text:`, q);
+      throw new Error(`Question ${i} is missing question text`);
+    }
+
+    // Options validation
+    if (!Array.isArray(q.options) || q.options.length !== 4) {
+      console.error(`Question ${i} has invalid options:`, q.options);
+      throw new Error(`Question ${i} must have exactly 4 options`);
+    }
+
+    const cleanedOptions = q.options.map((opt: any) => {
+      if (typeof opt !== 'string') {
+        console.error(`Invalid option in question ${i}:`, opt);
+        throw new Error(`Question ${i} has an invalid option`);
+      }
+      return opt.trim();
+    });
+
+    // Correct answer validation
+    if (typeof q.correctAnswer !== 'number' || 
+        q.correctAnswer < 0 || 
+        q.correctAnswer > 3) {
+      console.error(`Question ${i} has invalid correctAnswer:`, q.correctAnswer);
+      throw new Error(`Question ${i} has invalid correct answer index`);
+    }
+
+    cleanedQuestions.push({
+      question: q.question.trim(),
+      options: cleanedOptions,
+      correctAnswer: q.correctAnswer
+    });
+  }
+  
+  return cleanedQuestions;
+};
+
+export async function GET() {
+  return NextResponse.json(
+    { error: 'Method not allowed' },
+    { status: 405 }
+  );
+}
+
+export async function POST(request: NextRequest) {
+  console.log('Starting quiz generation...');
+  
+  try {
+    // 1. Parse request
+    const body = await request.json();
+    const { topic, concept } = body;
+
+    if (!topic || !concept) {
+      return NextResponse.json(
+        { error: 'Topic and concept are required' },
+        { status: 400 }
+      );
+    }
+
+    // 2. Initialize AI client
+    let model;
+    try {
+      model = initializeGeminiClient();
+    } catch (error) {
+      console.error('Failed to initialize AI client:', error);
+      return NextResponse.json({
+        error: 'AI service configuration error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }, { status: 503 });
+    }
+
+    // 3. Generate questions
+    const prompt = `Generate exactly 3 multiple choice questions about ${topic}, focusing on ${concept}.
+Return ONLY a JSON array with no additional text.
+Each question must have:
+1. A clear, concise question
+2. Exactly 4 answer options
+3. A correctAnswer number (0-3) indicating the correct option's index
+
+Required JSON format:
+[
+  {
+    "question": "What is...",
+    "options": ["A", "B", "C", "D"],
+    "correctAnswer": 0
+  }
+]
+
+Ensure all JSON uses double quotes. Do not include any text before or after the JSON array.`;
+
+    console.log('Sending prompt to Gemini...');
+    const result = await model.invoke(prompt);
+    console.log('Raw response:', result.text);
+
+    if (!result?.text) {
+      return NextResponse.json(
+        { error: 'Empty response from AI service' },
+        { status: 500 }
+      );
+    }
+
+    // 4. Parse and clean response
+    let questions;
+    try {
+      // Clean the response text
+      const cleanedText = result.text
+        .trim()
+        .replace(/^```json\s*/, '')  // Remove markdown JSON marker
+        .replace(/\s*```$/, '')      // Remove ending markdown marker
+        .replace(/^\s*\[\s*\{/, '[{')  // Clean array start
+        .replace(/\}\s*\]\s*$/, '}]'); // Clean array end
+
+      console.log('Cleaned text:', cleanedText);
+      questions = JSON.parse(cleanedText);
+
+      if (!Array.isArray(questions)) {
+        console.error('Parsed result is not an array:', questions);
+        throw new Error('Response is not an array');
+      }
+
+      // Validate and clean questions
+      questions = cleanAndValidateQuestions(questions);
+
+    } catch (error) {
+      console.error('Failed to parse AI response:', error);
+      console.error('Raw text:', result.text);
+      return NextResponse.json({
+        error: 'Failed to generate valid quiz format',
+        details: error instanceof Error ? error.message : 'Invalid response format'
+      }, { status: 500 });
+    }
+
+    // 5. Return successful response
+    return NextResponse.json({
+      questions,
+      meta: {
+        topic,
+        concept,
+        count: questions.length
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Unhandled error:', error);
+    return NextResponse.json({
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }, { status: 500 });
+  }
+}

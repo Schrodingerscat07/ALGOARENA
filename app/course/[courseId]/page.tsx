@@ -135,7 +135,7 @@ export default function CoursePage() {
             <CourseProgressCard
               courseId={courseId}
               userId={user.uid}
-              progress={userProgress}
+              progress={userProgress ?? undefined}
               onEnroll={async () => {
                 try {
                   await enrollInCourse(user.uid, courseId);

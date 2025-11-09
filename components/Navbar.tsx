@@ -29,12 +29,12 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-40">
+    <nav className="bg-game-surface shadow-lg border-b border-game-border sticky top-0 z-40 minecraft-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2">
-            <GraduationCap className="w-8 h-8 text-primary-600" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
+            <GraduationCap className="w-8 h-8 text-game-accent1" />
+            <span className="text-2xl font-bold bg-gradient-to-r from-game-accent1 to-game-accent2 bg-clip-text text-transparent">
               AlgoArena
             </span>
           </Link>
@@ -42,7 +42,7 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center space-x-4">
             <Link
               href="/"
-              className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+              className="text-game-accent2 hover:text-game-accent1 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
             >
               <BookOpen className="w-4 h-4" />
               Courses
@@ -51,7 +51,7 @@ export const Navbar: React.FC = () => {
             {userData?.role === 'creator' && (
               <Link
                 href="/create-course"
-                className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                className="text-game-accent2 hover:text-game-accent1 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Create Course
@@ -61,7 +61,7 @@ export const Navbar: React.FC = () => {
             {userData?.role === 'admin' && (
               <Link
                 href="/admin/expert-requests"
-                className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                className="text-game-accent2 hover:text-game-accent1 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
               >
                 <Shield className="w-4 h-4" />
                 Admin
@@ -74,7 +74,7 @@ export const Navbar: React.FC = () => {
               <div className="flex items-center space-x-3">
                 <Link
                   href="/profile"
-                  className="flex items-center space-x-2 text-sm text-gray-700 hover:text-primary-600 transition-colors cursor-pointer"
+                  className="flex items-center space-x-2 text-sm text-game-text hover:text-game-accent1 transition-colors cursor-pointer"
                 >
                   <UserIcon className="w-4 h-4" />
                   <span className="font-medium">{userData?.displayName || user.email}</span>

@@ -433,10 +433,7 @@ const LevelConfigModal: React.FC<LevelConfigModalProps> = ({
     // Validate MCQ questions
     const validQuestions = mcqQuestions.filter((q) => q.question.trim() !== '' && q.options.some(o => o.trim() !== ''));
     
-    if (validQuestions.length < 4) {
-      alert('Minimum 4 MCQ questions required. Please fill in all questions.');
-      return;
-    }
+    // Minimum question count requirement removed per user request — allow any number of questions (>=0)
     if (validQuestions.length > 40) {
       alert('Maximum 40 MCQ questions allowed');
       return;
@@ -578,9 +575,7 @@ const LevelConfigModal: React.FC<LevelConfigModalProps> = ({
               Add Question
             </Button>
           </div>
-          {mcqQuestions.length < 4 && (
-            <p className="text-xs text-amber-600 mb-2">Minimum 4 questions required</p>
-          )}
+          {/* Minimum-4-questions UI warning removed per user request */}
           <div className="space-y-4">
             {mcqQuestions.map((question, qIndex) => (
               <div key={qIndex} className="border border-gray-200 rounded-lg p-4">
@@ -624,7 +619,7 @@ const LevelConfigModal: React.FC<LevelConfigModalProps> = ({
                         - Option
                       </button>
                     )}
-                    {mcqQuestions.length > 4 && (
+                    {mcqQuestions.length > 1 && (
                       <button
                         onClick={() => handleRemoveMcqQuestion(qIndex)}
                         className="text-red-600 hover:text-red-700"

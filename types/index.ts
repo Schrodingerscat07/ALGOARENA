@@ -50,6 +50,7 @@ export interface Level {
   studyMaterials: StudyMaterial[]; // Round 1
   mcqQuiz?: MCQQuestion[]; // Round 2 (optional)
   passingScore?: number; // Minimum score needed to pass this level
+  aiQuizContext?: string; // Optional context for AI-generated quizzes
 }
 
 export interface StudyMaterial {
