@@ -16,9 +16,21 @@ export interface User {
   progress: Record<string, CourseProgress>;
 }
 
+import { Timestamp } from 'firebase/firestore';
+
 export interface CourseProgress {
   completedNodes: string[];
   currentNode: string | null;
+  enrolled: boolean;
+  startedAt?: Timestamp;
+  lastAccessedAt?: Timestamp;
+  completedAt?: Timestamp;
+  score?: number;         // Overall course score
+  timeSpent?: number;     // Total time spent in minutes
+  levelsCompleted?: number;
+  totalLevels?: number;
+  rating?: number;        // User rating for the course (1-5)
+  review?: string;        // User review/comment
 }
 
 export interface Course {
@@ -36,9 +48,8 @@ export interface Level {
   id: string; // Must match nodeId from graphData
   title: string;
   studyMaterials: StudyMaterial[]; // Round 1
-  mcqQuiz: MCQQuestion[]; // Round 2
-  passingScore: number; // Minimum score needed to pass this level
-  aiQuizContext: string; // Round 3 (for future AI integration)
+  mcqQuiz?: MCQQuestion[]; // Round 2 (optional)
+  passingScore?: number; // Minimum score needed to pass this level
 }
 
 export interface StudyMaterial {

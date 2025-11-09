@@ -11,7 +11,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Course, Level, User, CourseProgress, ReactFlowData, UserType } from '@/types';
+import { Course, Level, User, CourseProgress, ReactFlowData, UserRole, UserType, CourseType } from '@/types';
 
 // Courses
 export const getCourse = async (courseId: string): Promise<Course | null> => {
@@ -180,6 +180,62 @@ export const getUserProgress = async (userId: string, courseId: string): Promise
   return null;
 };
 
+// Enroll in a course
+export const enrollInCourse = async (userId: string, courseId: string): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  const userDoc = await getDoc(userRef);
+  
+  if (!userDoc.exists()) {
+    throw new Error('User not found');
+  }
+  
+  const progress: CourseProgress = {
+    completedNodes: [],
+    currentNode: null,
+    enrolled: true,
+    startedAt: Timestamp.now(),
+    lastAccessedAt: Timestamp.now(),
+    levelsCompleted: 0,
+    totalLevels: 0, // Will be updated when first accessing a level
+  };
+
+  await updateDoc(userRef, {
+    [`progress.${courseId}`]: progress,
+  });
+};
+
+// Update course rating
+export const updateCourseRating = async (
+  userId: string,
+  courseId: string,
+  rating: number,
+  review?: string
+): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  const userDoc = await getDoc(userRef);
+  
+  if (!userDoc.exists()) {
+    throw new Error('User not found');
+  }
+  
+  const userData = userDoc.data() as User;
+  const currentProgress = userData.progress[courseId];
+  
+  if (!currentProgress || !currentProgress.enrolled) {
+    throw new Error('User is not enrolled in this course');
+  }
+
+  const updatedProgress: CourseProgress = {
+    ...currentProgress,
+    rating,
+    review,
+  };
+
+  await updateDoc(userRef, {
+    [`progress.${courseId}`]: updatedProgress,
+  });
+};
+
 export const updateUserProgress = async (
   userId: string,
   courseId: string,
@@ -197,6 +253,11 @@ export const updateUserProgress = async (
   const currentProgress = userData.progress[courseId] || {
     completedNodes: [],
     currentNode: null,
+    enrolled: true,
+    startedAt: Timestamp.now(),
+    lastAccessedAt: Timestamp.now(),
+    levelsCompleted: 0,
+    totalLevels: graphData.nodes.length,
   };
   
   // Add levelId to completed nodes if not already there
@@ -236,6 +297,8 @@ export const updateUserProgress = async (
   const updatedProgress: CourseProgress = {
     completedNodes: updatedCompletedNodes,
     currentNode: nextNodes[0] || null,
+    enrolled: true,
+    lastAccessedAt: Timestamp.now(),
   };
   
   await updateDoc(userRef, {

@@ -19,10 +19,10 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = 'font-semibold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variants = {
-    primary: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800',
-    secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 active:bg-gray-400',
-    outline: 'border-2 border-primary-600 text-primary-600 hover:bg-primary-50 active:bg-primary-100',
-    ghost: 'text-primary-600 hover:bg-primary-50 active:bg-primary-100',
+    primary: 'bg-game-accent1 text-white hover:bg-game-accent2 active:opacity-90 minecraft-border',
+    secondary: 'bg-game-surface text-game-text hover:bg-game-border active:bg-game-border minecraft-border',
+    outline: 'border-2 border-game-accent1 text-game-accent1 hover:bg-game-surface/10 active:bg-game-surface/20 minecraft-border',
+    ghost: 'text-game-text hover:bg-game-surface/10 active:bg-game-surface/20',
   };
   
   const sizes = {

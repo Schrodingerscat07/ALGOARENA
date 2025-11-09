@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Press_Start_2P } from 'next/font/google';
 import './globals.css';
 import { Navbar } from '@/components/Navbar';
 import { FirebaseAppCheckProvider } from '@/components/FirebaseAppCheckProvider';
 
-const inter = Inter({ subsets: ['latin'] });
+const gameFont = Press_Start_2P({ 
+  weight: '400',
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'AlgoArena - Gamified E-Learning Platform',
@@ -18,10 +22,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={gameFont.className}>
         <FirebaseAppCheckProvider>
           <Navbar />
-          <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+          <main className="min-h-screen bg-game-background">
             {children}
           </main>
         </FirebaseAppCheckProvider>

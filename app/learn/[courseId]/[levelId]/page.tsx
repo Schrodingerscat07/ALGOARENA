@@ -33,15 +33,11 @@ export default function LevelPage() {
   const [user] = useAuthState(auth);
   const [level, setLevel] = useState<Level | null>(null);
   const [loading, setLoading] = useState(true);
-  const [round, setRound] = useState<'learn' | 'mcq' | 'ai'>('learn');
+  const [round, setRound] = useState<'learn' | 'mcq'>('learn');
   const [learnComplete, setLearnComplete] = useState(false);
   const [mcqAnswers, setMcqAnswers] = useState<number[]>([]);
   const [mcqScore, setMcqScore] = useState<number | null>(null);
   const [mcqPassed, setMcqPassed] = useState(false);
-  const [aiQuestions, setAiQuestions] = useState<string[]>([]);
-  const [aiAnswers, setAiAnswers] = useState<Record<number, string>>({});
-  const [aiGrading, setAiGrading] = useState(false);
-  const [aiResult, setAiResult] = useState<{ score: number; feedback: string; passed: boolean } | null>(null);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
 
   useEffect(() => {
@@ -62,13 +58,28 @@ export default function LevelPage() {
     loadLevel();
   }, [courseId, levelId, router]);
 
-  const handleLearnComplete = () => {
+  const handleLearnComplete = async () => {
     setLearnComplete(true);
-    setRound('mcq');
+    if (level?.mcqQuiz) {
+      setRound('mcq');
+    } else if (user) {
+      // If no MCQ quiz, complete the level directly
+      try {
+        const course = await getCourse(courseId);
+        if (course) {
+          const graphData: ReactFlowData = JSON.parse(course.graphData);
+          await updateUserProgress(user.uid, courseId, levelId, graphData);
+          setShowCompleteModal(true);
+        }
+      } catch (error) {
+        console.error('Error updating progress:', error);
+        alert('Failed to update progress. Please try again.');
+      }
+    }
   };
 
-  const handleMcqSubmit = () => {
-    if (!level) return;
+  const handleMcqSubmit = async () => {
+    if (!level?.mcqQuiz) return;
     let correct = 0;
     level.mcqQuiz.forEach((question, index) => {
       if (mcqAnswers[index] === question.correctIndex) {
@@ -77,60 +88,23 @@ export default function LevelPage() {
     });
     const score = (correct / level.mcqQuiz.length) * 100;
     setMcqScore(score);
-    const passed = score >= 80;
+    const passed = score >= (level.passingScore || 80);
     setMcqPassed(passed);
-    if (passed) {
-      setRound('ai');
-    }
-  };
-
-  const generateAiQuestions = async () => {
-    if (!level) return;
-    try {
-      const result = await httpsCallable('generateAiQuestions', {
-        context: level.aiQuizContext,
-      });
-      setAiQuestions(result.questions || []);
-    } catch (error) {
-      console.error('Error generating AI questions:', error);
-      alert('Failed to generate AI questions. Please try again.');
-    }
-  };
-
-  const gradeAiAnswers = async () => {
-    if (!level || aiQuestions.length === 0) return;
-    setAiGrading(true);
-    try {
-      const answers = aiQuestions.map((_, index) => aiAnswers[index] || '');
-      const result = await httpsCallable('gradeAiAnswers', {
-        context: level.aiQuizContext,
-        questions: aiQuestions,
-        answers: answers,
-      });
-      setAiResult(result);
-      
-      if (result.passed && user) {
-        // Update user progress
+    
+    if (passed && user) {
+      try {
         const course = await getCourse(courseId);
         if (course) {
           const graphData: ReactFlowData = JSON.parse(course.graphData);
           await updateUserProgress(user.uid, courseId, levelId, graphData);
+          setShowCompleteModal(true);
         }
-        setShowCompleteModal(true);
+      } catch (error) {
+        console.error('Error updating progress:', error);
+        alert('Failed to update progress. Please try again.');
       }
-    } catch (error) {
-      console.error('Error grading AI answers:', error);
-      alert('Failed to grade answers. Please try again.');
-    } finally {
-      setAiGrading(false);
     }
   };
-
-  useEffect(() => {
-    if (round === 'ai' && aiQuestions.length === 0) {
-      generateAiQuestions();
-    }
-  }, [round]);
 
   if (loading || !level) {
     return (
@@ -159,25 +133,19 @@ export default function LevelPage() {
             onClick={() => setRound('learn')}
             disabled={false}
           >
-            {learnComplete ? <CheckCircle className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
-            Round 1: Learn
+            {learnComplete ? <CheckCircle className="w-4 h-4 mr-2" /> : null}
+            Study Materials
           </Button>
-          <Button
-            variant={round === 'mcq' ? 'primary' : mcqPassed ? 'secondary' : 'outline'}
-            onClick={() => learnComplete && setRound('mcq')}
-            disabled={!learnComplete}
-          >
-            {mcqPassed ? <CheckCircle className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
-            Round 2: Quiz
-          </Button>
-          <Button
-            variant={round === 'ai' ? 'primary' : mcqPassed ? 'outline' : 'outline'}
-            onClick={() => mcqPassed && setRound('ai')}
-            disabled={!mcqPassed}
-          >
-            {aiResult?.passed ? <CheckCircle className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
-            Round 3: AI Challenge
-          </Button>
+          {level.mcqQuiz && (
+            <Button
+              variant={round === 'mcq' ? 'primary' : mcqPassed ? 'secondary' : 'outline'}
+              onClick={() => learnComplete && setRound('mcq')}
+              disabled={!learnComplete}
+            >
+              {mcqPassed ? <CheckCircle className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
+              Practice Quiz
+            </Button>
+          )}
         </div>
       </div>
 
@@ -230,10 +198,10 @@ export default function LevelPage() {
         </Card>
       )}
 
-      {/* Round 2: MCQ Quiz */}
-      {round === 'mcq' && (
+      {/* Optional MCQ Quiz */}
+      {round === 'mcq' && level.mcqQuiz && (
         <Card>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Creator Quiz</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Practice Quiz</h2>
           <div className="space-y-6">
             {level.mcqQuiz.map((question, qIndex) => (
               <div key={qIndex} className="border border-gray-200 rounded-lg p-4">

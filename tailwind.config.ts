@@ -9,17 +9,29 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Minecraft-inspired color palette
         primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
+          50: '#C6FFC6',  // Light green
+          100: '#92FF92', // Bright green
+          200: '#5EFF5E', // Lime green
+          300: '#2AFF2A', // Neon green
+          400: '#00F600', // Pure green
+          500: '#00C200', // Medium green
+          600: '#008E00', // Dark green
+          700: '#005A00', // Forest green
+          800: '#002600', // Deep green
+          900: '#001300', // Almost black green
+        },
+        game: {
+          background: '#1A1C2C', // Dark background
+          surface: '#2A2C3C',    // Slightly lighter surface
+          accent1: '#7A3BB3',    // Purple accent
+          accent2: '#41A6F6',    // Blue accent
+          accent3: '#FF6B6B',    // Red accent
+          text: '#E0E0E0',       // Light text
+          textDim: '#9A9AB0',    // Dimmed text
+          border: '#3A3C4C',     // Border color
+          highlight: '#FFB938',  // Gold highlight
         },
       },
       animation: {

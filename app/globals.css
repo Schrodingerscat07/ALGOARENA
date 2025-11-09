@@ -3,44 +3,62 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+  --minecraft-pattern: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kT1Iw0AcxV9TxQ8qInYQUchQnSyIijhKFYtgobQVWnUwufQLmjQkKS6OgmvBwY/FqoOLs64OroIg+AHi6OSk6CIl/i8ptIjx4Lgf7+497t4BQqPMNKtrHNB020wl4mImuyoGXhFECH0YRVBmljEnSUl4jq97+Ph6F+dZ3uf+HP1q3mKATySeZYZpE28QT2/aBud94ggryirxOfGYSRckfuS64vEb54LLAs8MmemUOEIsFjpY7mBWNlTiKeKoomqUL2RdVjhvcVYrNda6J39huKAtZ7hOaxgJLCKJFETIqGEDFViI0aqRYiJF+1gPf9T1J8klk2sDjBzzqEKD5PrB/+B3b62c8SQXSoHOF8f5GAeCu0CzznG+jx2neQIEn4ErveWv1IGZT9JrLS16BPRtAxfXLU3ZAy53gf4nQzZlVwrSCvk88H5G35QFem+BnjW3t+Y+Th+ANHWVvAEODoHRImWve7y7p7O3f8+0+vsBD0pyoXWMm9QAAAAJcEhZcwAALiMAAC4jAXilP3YAAAAHdElNRQfmCwoONzVKT8H7AAAAGXRFWHRDb21tZW50AENyZWF0ZWQgd2l0aCBHSU1QV4EOFwAAAYdJREFUeNrtmVEOgyAMhsvTeBPZ03gTn/coXmavO4lj+9skS4YYKbTQgmVPNUb4+GuhCAB4LZ73DzpVnue5rmHLi2F4KGHbtq7jRRz7I4TwGEJVVYf3pYGwC3N2wRBCbIBt29Zh8R0AEfkcXkKYpim7AEII9wHgcMuyuA2CG4CUMrsAF8/Rp67rD+99KeOPZVZq+eUKYMoAU34ZAHQJnDmqyCo7DUCv+FSpPkYUwHOXwYbheBGsxWR/FkDmvU+6FRDjP3N1EOsBQRDMlMMRxdBDDuHjHjEXkBKSqgPwGrHiiXHP+2SyOwAzxXzLrYfA+7TfttECRCnp9UhtjHnFSNr2xBgTdQdQ/ufsAb5+cGDK9gPkhxT7ZFc2QHpI8RLARpIjpQdwSJkAIGWAKb8MgLcHcBqgvAWx+QCbAlByfrjUAECAIAMJdIAwDKmqCpqmOZg0p3W3ZYMQqeVuGEC/4x+hlXPAUWcxJcOf5QiJdzQzAfTLAO+nw3QAzwyDjAA8r0lYff4NTvfWJg6nmF4AAAAASUVORK5CYII=");
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  @apply bg-game-background text-game-text;
+  background-image: var(--minecraft-pattern);
+  background-repeat: repeat;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+
+  .minecraft-border {
+    @apply border-2 border-game-border shadow-lg;
+    position: relative;
+  }
+
+  .minecraft-border::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid transparent;
+    @apply bg-gradient-to-r from-game-accent1 to-game-accent2;
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+  }
 }
 
 @layer base {
   input, textarea, select {
-    @apply bg-white text-gray-900 placeholder-gray-400 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply bg-game-surface text-game-text placeholder-game-textDim border-game-border rounded-lg focus:ring-2 focus:ring-game-accent1 focus:border-transparent;
   }
 
-  @media (prefers-color-scheme: dark) {
-    input, textarea, select {
-      @apply bg-gray-900 text-white placeholder-gray-400 border-gray-700;
-    }
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-game-highlight;
+  }
+
+  a {
+    @apply text-game-accent2 hover:text-game-accent1 transition-colors;
+  }
+
+  button {
+    @apply minecraft-border;
+  }
+
+  .card {
+    @apply bg-game-surface minecraft-border;
   }
 }
 
