@@ -232,6 +232,7 @@ This is a complete production-ready platform. Feel free to extend it with additi
 - Certificates
 - Advanced analytics
 - Social features
+- Chat bot integration
 
 ## License
 
